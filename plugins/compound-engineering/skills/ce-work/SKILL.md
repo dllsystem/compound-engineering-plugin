@@ -175,6 +175,7 @@ Before starting work, discover the project's available tools and environment. If
      - Add, update, or remove tests to match implementation changes (see Test Discovery below)
      - Run System-Wide Test Check (see below)
      - Run tests after changes
+     - Assess testing coverage: did this task change behavior? If yes, were tests written or updated? If no tests were added, is the justification deliberate (e.g., pure config, no behavioral change)?
      - Mark task as completed
      - Evaluate for incremental commit (see below)
    ```
@@ -311,7 +312,7 @@ Before starting work, discover the project's available tools and environment. If
 
 3. **Final Validation**
    - All tasks marked completed
-   - All tests pass
+   - Testing addressed -- tests pass and new/changed behavior has corresponding test coverage (or an explicit justification for why tests are not needed)
    - Linting passes
    - Code follows existing patterns
    - Figma designs match (if applicable)
@@ -455,7 +456,7 @@ Before creating PR, verify:
 
 - [ ] All clarifying questions asked and answered
 - [ ] All tasks marked completed
-- [ ] Tests pass (run project's test command)
+- [ ] Testing addressed -- tests pass AND new/changed behavior has corresponding test coverage (or an explicit justification for why tests are not needed)
 - [ ] Linting passes (use linting-agent)
 - [ ] Code follows existing patterns
 - [ ] Figma designs match implementation (if applicable)
