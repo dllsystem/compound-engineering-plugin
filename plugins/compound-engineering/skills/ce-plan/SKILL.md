@@ -140,6 +140,29 @@ Classify the work into one of these plan depths:
 
 If depth is unclear, ask one targeted question and then continue.
 
+### Phase 0.7: Environment Discovery
+
+Before gathering context, discover the project's available tools and environment. If an `<environment-context>` block was passed from a previous workflow (e.g., `ce:brainstorm`), adopt it and skip to Phase 1. Otherwise, run discovery:
+
+1. **Project instructions** — Read `CLAUDE.md` and `AGENTS.md` from the project root. These contain project-specific conventions, tech stack context, and workflow guidance that should inform the plan.
+
+2. **Available MCP servers** — Check what MCP server tools are accessible in the current session. Look for project-specific MCP tools (e.g., `mcp__jetbrains__*`, `mcp__plugin_*`, framework-specific MCPs). Note their capabilities — they may provide project introspection (routes, models, schema, dependencies) that is more accurate than code scanning.
+
+3. **Project-local skills** — Glob for `.claude/skills/**/SKILL.md` and `.claude/commands/**/*.md` in the project root. Note any project-specific skills that could be useful during planning or execution.
+
+4. **Produce an environment context block**:
+
+```
+<environment-context>
+- Project instructions: [paths found]
+- MCP servers: [name: brief capability for each]
+- Project skills: [name: brief description for each]
+- Tech stack signals: [from CLAUDE.md or manifest files if read]
+</environment-context>
+```
+
+This context informs research agent dispatch, plan structure, and downstream execution.
+
 ### Phase 1: Gather Context
 
 #### 1.1 Local Research (Always Runs)
@@ -147,17 +170,19 @@ If depth is unclear, ask one targeted question and then continue.
 Prepare a concise planning context summary (a paragraph or two) to pass as input to the research agents:
 - If an origin document exists, summarize the problem frame, requirements, and key decisions from that document
 - Otherwise use the feature description directly
+- Include the `<environment-context>` block so research agents know what MCP servers and project tools are available
 
 Run these agents in parallel:
 
-- Task compound-engineering:research:repo-research-analyst(Scope: technology, architecture, patterns. {planning context summary})
+- Task compound-engineering:research:repo-research-analyst(Scope: technology, architecture, patterns. {planning context summary with environment context})
 - Task compound-engineering:research:learnings-researcher(planning context summary)
 
 Collect:
 - Technology stack and versions (used in section 1.2 to make sharper external research decisions)
 - Architectural patterns and conventions to follow
 - Implementation patterns, relevant files, modules, and tests
-- AGENTS.md guidance that materially affects the plan, with CLAUDE.md used only as compatibility fallback when present
+- Project instruction guidance (`CLAUDE.md` and `AGENTS.md`) that materially affects the plan — both are primary sources when present
+- Available MCP servers and their capabilities (from environment discovery)
 - Institutional learnings from `docs/solutions/`
 
 #### 1.1b Detect Execution Posture Signals
@@ -213,10 +238,10 @@ Announce the decision briefly before continuing. Examples:
 
 #### 1.3 External Research (Conditional)
 
-If Step 1.2 indicates external research is useful, run these agents in parallel:
+If Step 1.2 indicates external research is useful, run these agents in parallel. Include the `<environment-context>` block so research agents can prefer project-specific MCP servers over generic external sources:
 
-- Task compound-engineering:research:best-practices-researcher(planning context summary)
-- Task compound-engineering:research:framework-docs-researcher(planning context summary)
+- Task compound-engineering:research:best-practices-researcher(planning context summary with environment context)
+- Task compound-engineering:research:framework-docs-researcher(planning context summary with environment context)
 
 #### 1.4 Consolidate Research
 
@@ -431,6 +456,22 @@ deepened: YYYY-MM-DD  # optional, set when the confidence check substantively st
 ## Scope Boundaries
 
 - [Explicit non-goal or exclusion]
+
+## Project Environment
+
+<!-- Include this section when environment discovery found MCP servers, project skills, or notable project instructions. Omit for projects with no special tooling. -->
+
+### Available MCP Servers
+
+- [MCP server name]: [What it provides — e.g., project introspection, route listing, model inspection]
+
+### Project Skills
+
+- [Skill name]: [Brief capability description]
+
+### Project Instructions
+
+- [Notable conventions, tech stack guidance, or workflow rules from CLAUDE.md/AGENTS.md that affect implementation]
 
 ## Context & Research
 

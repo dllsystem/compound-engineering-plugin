@@ -22,6 +22,29 @@ This command takes a work document (plan, specification, or todo file) or a bare
 
 Determine how to proceed based on what was provided in `<input_document>`.
 
+#### 0.1 Environment Discovery
+
+Before starting work, discover the project's available tools and environment. If the plan document contains a `## Project Environment` section or an `<environment-context>` block was passed from a previous workflow, adopt it and skip to 0.2. Otherwise, run discovery:
+
+1. **Project instructions** — Read `CLAUDE.md` and `AGENTS.md` from the project root. These contain project-specific conventions, tech stack context, and workflow guidance.
+
+2. **Available MCP servers** — Check what MCP server tools are accessible in the current session. Look for project-specific MCP tools (e.g., `mcp__jetbrains__*`, `mcp__plugin_*`, framework-specific MCPs). Note their capabilities — use them during implementation when they provide better project introspection than code scanning (e.g., querying routes, listing models, inspecting schema).
+
+3. **Project-local skills** — Glob for `.claude/skills/**/SKILL.md` and `.claude/commands/**/*.md` in the project root. Note available skills for use during execution.
+
+4. **Produce an environment context block** for subagent dispatch:
+
+```
+<environment-context>
+- Project instructions: [paths found]
+- MCP servers: [name: brief capability for each]
+- Project skills: [name: brief description for each]
+- Tech stack signals: [from CLAUDE.md or manifest files]
+</environment-context>
+```
+
+#### 0.2 Route by Input Type
+
 **Plan document** (input is a file path to an existing plan, specification, or todo file) → skip to Phase 1.
 
 **Bare prompt** (input is a description of work, not a file path):
@@ -126,9 +149,11 @@ Determine how to proceed based on what was provided in `<input_document>`.
 
    **Subagent dispatch** uses your available subagent or task spawning mechanism. For each unit, give the subagent:
    - The full plan file path (for overall context)
+   - The `<environment-context>` block from Phase 0.1 — so the subagent knows which MCP servers are available and can use project-specific tools (e.g., querying routes via a framework MCP instead of grepping config files)
    - The specific unit's Goal, Files, Approach, Execution note, Patterns, Test scenarios, and Verification
    - Any resolved deferred questions relevant to that unit
    - Instruction to check whether the unit's test scenarios cover all applicable categories (happy paths, edge cases, error paths, integration) and supplement gaps before writing tests
+   - Instruction to prefer project MCP tools when they provide more accurate introspection than static code analysis (e.g., use a Laravel MCP to query actual routes rather than parsing route files manually)
 
    After each subagent completes, update the plan checkboxes and task list before dispatching the next dependent unit.
 
@@ -224,7 +249,7 @@ Determine how to proceed based on what was provided in `<input_document>`.
    - The plan should reference similar code - read those files first
    - Match naming conventions exactly
    - Reuse existing components where possible
-   - Follow project coding standards (see AGENTS.md; use CLAUDE.md only if the repo still keeps a compatibility shim)
+   - Follow project coding standards (see `CLAUDE.md` and `AGENTS.md` — both are primary sources when present)
    - When in doubt, grep for similar implementations
 
 4. **Test Continuously**

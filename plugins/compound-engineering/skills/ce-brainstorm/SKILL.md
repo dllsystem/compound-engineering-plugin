@@ -73,6 +73,29 @@ Use the feature description plus a light repo scan to classify the work:
 
 If the scope is unclear, ask one targeted question to disambiguate and then proceed.
 
+### Phase 0.5: Environment Discovery
+
+Before substantive brainstorming, discover the project's available tools and context. This grounds the brainstorm in the project's actual capabilities.
+
+1. **Project instructions** — Read `CLAUDE.md` and `AGENTS.md` from the project root. These contain project-specific conventions, tech stack context, and workflow guidance that should inform the brainstorm.
+
+2. **Available MCP servers** — Check what MCP server tools are accessible in the current session. Look for project-specific MCP tools (e.g., `mcp__jetbrains__*`, `mcp__plugin_*`, framework-specific MCPs like Laravel Boost). Note their capabilities — they may provide project introspection (routes, models, schema) that is more accurate than code scanning.
+
+3. **Project-local skills** — Glob for `.claude/skills/**/SKILL.md` and `.claude/commands/**/*.md` in the project root. Note any project-specific skills that could be useful during later planning or execution phases.
+
+4. **Produce an environment context block** to carry forward:
+
+```
+<environment-context>
+- Project instructions: [paths found]
+- MCP servers: [name: brief capability for each]
+- Project skills: [name: brief description for each]
+- Tech stack signals: [from CLAUDE.md or manifest files if read]
+</environment-context>
+```
+
+This context informs Phase 1 research and is passed to downstream workflows (`/ce:plan`, `/ce:work`) when handing off.
+
 ### Phase 1: Understand the Idea
 
 #### 1.1 Existing Context Scan
@@ -83,7 +106,7 @@ Scan the repo before substantive brainstorming. Match depth to scope:
 
 **Standard and Deep** — Two passes:
 
-*Constraint Check* — Check project instruction files (`AGENTS.md`, and `CLAUDE.md` only if retained as compatibility context) for workflow, product, or scope constraints that affect the brainstorm. If these add nothing, move on.
+*Constraint Check* — Check project instruction files (`CLAUDE.md` and `AGENTS.md`) for workflow, product, or scope constraints that affect the brainstorm. Both files are primary sources — read whichever exists, and use both when present. If these add nothing, move on.
 
 *Topic Scan* — Search for relevant terms. Read the most relevant existing artifact if one exists (brainstorm, plan, spec, skill, feature doc). Skim adjacent examples covering similar behavior.
 
@@ -288,11 +311,11 @@ If the direct-to-work gate is not satisfied, omit that option entirely.
 
 **If user selects "Proceed to planning (Recommended)":**
 
-Immediately run `/ce:plan` in the current session. Pass the requirements document path when one exists; otherwise pass a concise summary of the finalized brainstorm decisions. Do not print the closing summary first.
+Immediately run `/ce:plan` in the current session. Pass the requirements document path when one exists; otherwise pass a concise summary of the finalized brainstorm decisions. Include the `<environment-context>` block from Phase 0.5 so downstream planning inherits the discovered MCP servers, project skills, and instruction file paths. Do not print the closing summary first.
 
 **If user selects "Proceed directly to work":**
 
-Immediately run `/ce:work` in the current session using the finalized brainstorm output as context. If a compact requirements document exists, pass its path. Do not print the closing summary first.
+Immediately run `/ce:work` in the current session using the finalized brainstorm output as context. If a compact requirements document exists, pass its path. Include the `<environment-context>` block from Phase 0.5. Do not print the closing summary first.
 
 **If user selects "Share to Proof":**
 

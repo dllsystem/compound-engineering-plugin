@@ -68,6 +68,15 @@ Before open-ended exploration, run a structured scan to identify the project's t
 
 Phase 0 is designed to be fast and cheap. The goal is signal, not exhaustive enumeration. Prefer a small number of broad tool calls over many narrow ones.
 
+**0.0 Environment Context Check**
+
+If the input includes an `<environment-context>` block from the orchestrating skill, adopt it. This block lists available MCP servers, project-local skills, and project instruction files. Use this information to:
+- Skip redundant discovery for capabilities already enumerated
+- Prefer MCP-provided introspection when it offers richer data than static scanning (e.g., a Laravel MCP that can list routes, models, and migrations is more accurate than grepping config files)
+- Include available MCP servers in the Technology & Infrastructure output
+
+If no environment context was provided, proceed with standard discovery.
+
 **0.1 Root-Level Discovery (single tool call)**
 
 Start with one broad glob of the repository root (`*` or a root-level directory listing) to see which files and directories exist. Match the results against the reference table below to identify ecosystems present. Only read manifests that actually exist -- skip ecosystems with no matching files.
@@ -164,6 +173,16 @@ Scan top-level directories under `src/`, `lib/`, `app/`, `pkg/`, `internal/` to 
 
 If no dependency manifests or infrastructure files are found, note the absence briefly and proceed to the next phase -- the scan is a best-effort grounding step, not a gate.
 
+**0.4 MCP Server and Project Tool Detection**
+
+Check for configured MCP servers and project-specific tools:
+
+1. If an `<environment-context>` block was provided, use its MCP server list directly
+2. Otherwise, check for MCP configuration files: `.mcp.json`, `.claude/settings.json`, or `.claude.json` in the project root. Extract server names and descriptions when found
+3. Also check for project-local skills by globbing `.claude/skills/**/SKILL.md`
+
+Note: MCP servers provide live project introspection that static file scanning cannot. A framework MCP (e.g., Laravel Boost) may expose routes, models, migrations, and relationships at runtime. This is particularly valuable for projects where configuration is convention-based rather than explicit in files.
+
 Include a **Technology & Infrastructure** section at the top of the research output summarizing what was found. This section should list:
 - Languages and major frameworks detected (with versions when available)
 - Deployment model (monolith, multi-service, serverless, etc.)
@@ -171,6 +190,8 @@ Include a **Technology & Infrastructure** section at the top of the research out
 - Data stores and async patterns
 - Module organization style
 - Monorepo structure (if detected): workspace layout and which service was scoped for the scan
+- Available MCP servers (name and capability summary for each)
+- Project-local skills (name and brief description for each)
 
 This context informs all subsequent research phases -- use it to focus documentation analysis, pattern search, and convention identification on the technologies actually present.
 
@@ -179,7 +200,7 @@ This context informs all subsequent research phases -- use it to focus documenta
 **Core Responsibilities:**
 
 1. **Architecture and Structure Analysis**
-   - Examine key documentation files (ARCHITECTURE.md, README.md, CONTRIBUTING.md, AGENTS.md, and CLAUDE.md only if present for compatibility)
+   - Examine key documentation files (ARCHITECTURE.md, README.md, CONTRIBUTING.md, CLAUDE.md, and AGENTS.md — both instruction files are primary sources when present)
    - Map out the repository's organizational structure
    - Identify architectural patterns and design decisions
    - Note any project-specific conventions or standards
@@ -233,6 +254,8 @@ Structure your findings as:
 - Data stores and async patterns
 - Module organization style
 - Monorepo structure (if detected): workspace layout and scoped service
+- Available MCP servers (name: capability summary)
+- Project-local skills (name: brief description)
 
 ### Architecture & Structure
 - Key findings about project organization
